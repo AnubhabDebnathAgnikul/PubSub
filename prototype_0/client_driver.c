@@ -5,17 +5,17 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/select.h>
+#include <pthread.h>
 
 // #include "common.h"
 
-#define PORT 1234
+#define PORT_1 1234
+#define PORT_2 5678
 #define BUFFER_SIZE 1024
 #define TIMEOUT_SEC 10
 #define TIMEOUT_USEC 100000
 
-// int PORT = 1234;
-
-int main()
+int client(int PORT)
 {
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
@@ -81,4 +81,18 @@ int main()
     close(sock);
 
     // return 0;
+}
+
+/* Driver */ 
+int main()
+{
+    pthread_t thread_id1, thread_id2;
+
+    int* port_1 = PORT_1;
+    int* port_2 = PORT_2;
+
+    pthread_create(&thread_id1,NULL, (void *)client,port_1);
+    pthread_create(&thread_id2,NULL, (void *)client,port_2);
+
+    pthread_exit(NULL);
 }

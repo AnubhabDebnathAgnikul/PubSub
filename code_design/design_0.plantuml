@@ -1,0 +1,51 @@
+@startuml 
+
+skinparam linetype polyline
+' skinparam linetype ortho
+
+
+title Communication Phases
+
+' node "process_a"
+' node "process_b"
+' node "process_c"
+node "process_A"
+
+node "process_B"
+
+node "process_C"
+
+folder Shared_Memory
+
+"server(publisher)"
+"client(subscriber)"
+
+
+
+
+[process_A] ..> [server(publisher)] : publisher thread
+note left
+    N threads for N publisher
+end note
+[process_A] ..> [client(subscriber)] : subscriber thread
+note right
+    M threads for M subscriber
+end note
+
+"server(publisher_B)"
+[process_B] ..> [server(publisher_B)] : publisher thread
+[server(publisher_B)] --> [client(subscriber)]
+
+
+
+
+"client(subscriber_C)"
+[process_C] ..> [client(subscriber_C)] : subscriber thread
+[server(publisher)] -left-> [client(subscriber_C)] 
+
+
+[Shared_Memory]..>[process_A]
+[Shared_Memory]..>[process_B]
+[Shared_Memory]..>[process_C]
+
+@enduml
