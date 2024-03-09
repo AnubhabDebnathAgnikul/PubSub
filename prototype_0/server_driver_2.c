@@ -183,6 +183,15 @@ int main()
 {
     pthread_t thread_id1, thread_id2;
 
+    /*
+        publisher_init()
+        {
+            if(no clash)
+            pthread_create(&thread_id1,NULL, (void *)server,NULL);   
+            pthread_create(&thread_id2,NULL, (void *)publish,NULL);
+        }
+    */
+
     pthread_create(&thread_id1,NULL, (void *)server,NULL);
     pthread_create(&thread_id2,NULL, (void *)fun,NULL);
 
