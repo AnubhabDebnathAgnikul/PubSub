@@ -17,6 +17,7 @@ int fun_server(void *arguments)
     thread_args *args = (thread_args *)arguments;
     while(1)
     {
+        /* Broadcasting Part*/
         if(args->trig == 1)
         {
             // printf("var: %d\n", args->trig);
