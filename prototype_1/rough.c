@@ -27,6 +27,8 @@ int fun_server(void *arguments)
     }
 }
 
+
+/*Remove while loop in Flight code usage*/
 int fun_trigger(void *arguments)
 {
     thread_args *args = (thread_args *)arguments;
