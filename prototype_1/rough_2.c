@@ -32,16 +32,14 @@ int fun_server(void *arguments)
 int fun_trigger(void *arguments)
 {
     thread_args *args = (thread_args *)arguments;
-    while(1)
-    {
-        printf("enter message: \n");
-        fgets(args->message,BUFFER_SIZE,stdin);
-        args->trig = 1;
-    }
+    printf("enter message: \n");
+    fgets(args->message,BUFFER_SIZE,stdin);
+    args->trig = 1;
+    return 0;
 }
 
 // init process 
-int main()
+thread_args* init()
 {
     pthread_t thread_id1, thread_id2;
 
@@ -56,6 +54,12 @@ int main()
     arg_1->trig = 0;
     pthread_create(&thread_id1,NULL, (void *)fun_server, arg_1);
     // pthread_create(&thread_id2,NULL, (void *)fun_trigger, arg_1);
+    pthread_detach(thread_id1);
+    return arg_1;
+}
 
-    pthread_exit(NULL);
+int main()
+{
+    thread_args *arg_1= init();
+    fun_trigger(arg_1);
 }
