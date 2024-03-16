@@ -13,8 +13,10 @@
  * This structure holds information related to a topic, including its name,
  * message buffer, trigger flag, thread ID of the server, and termination flag.
  */
-typedef struct {
+typedef struct 
+{
     _Atomic int trig; /**< Trigger flag */
+    /*make void pointer to strcture*/
     char message[BUFFER_SIZE]; /**< Message buffer */
     pthread_t server_thread_id; /**< Thread ID of the server */
     char topic[BUFFER_SIZE]; /**< Topic name */
@@ -36,6 +38,7 @@ void* fun_server(void *arguments)
     topic_t *args = (topic_t *)arguments;
     while(1) 
     {
+        // broadcast
         if (atomic_load(&(args->trig)) == 1) 
         {
             printf("Sending message from %s server: %s\n",args->topic, args->message);

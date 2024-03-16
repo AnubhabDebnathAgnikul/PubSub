@@ -6,6 +6,7 @@ compiler := gcc
 build:
 	@$(compiler) $(source_1) -o $(target_1)
 	@echo "Compiled & Built"
+	
 assembly:
 	@$(compiler) -S $(source_1) -o $(target_1)
 	@echo assemblycode generated
