@@ -83,7 +83,7 @@ int publish_message(void *arguments)
     {
         if (atomic_load(&(args->trig)) == 0)
         {
-            return EXIT_SUCCESS;
+            return EXIT_SUCCES;
         }
     }
 

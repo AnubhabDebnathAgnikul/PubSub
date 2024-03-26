@@ -1,1 +1,14 @@
 THis Repository is for prototyping/implementation/testig & maintenance of Pub Sub communication architecture 
+
+Pubsub_sample_3_test_branch:
+Contents:
+1. BIN/ - Contains all the BINARY FILES build by make pub/sub/sync (or) all keywords 
+2. inc/ - Customs header files (Including *_lib.h Files) 
+3. old_imp_files/ - Older Developed codes and used in past of the development process is used 
+4. src/ - All the *.c Files can be found here (Including *_lib.c Files)
+5. src_tests/ - All the current under testing codes can be found here (All "make test" comes here) (Executable also found here)
+6. Makefile - Makefile for the this project.
+7. config.h - File containing the important #defines
+
+Note:
+current - Under development Publisher.c can be found in "src_tests/Publisher_new_imp.c" (New implementation)

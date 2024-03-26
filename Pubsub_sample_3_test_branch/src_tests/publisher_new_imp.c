@@ -80,8 +80,8 @@ int server_thread(void* args)
         exit(EXIT_FAILURE);
     }
 
-    while(1)
-    {
+    // while(1)
+    // {
     
     // listen
     if (listen(server_socket, 5) == -1) 
@@ -103,8 +103,8 @@ int server_thread(void* args)
 
     printf("connections accepted from client_fd : %d \n", client_socket);
 
-    // while(1)
-    // {
+    while(1)
+    {
         
         if (atomic_load(&(topic_1->trig_sig)) == 1)
         {
@@ -118,23 +118,25 @@ int server_thread(void* args)
                 exit(EXIT_FAILURE);
             }
 
-            atomic_store(&(topic_1->trig_sig),2);
+            atomic_store(&(topic_1->trig_sig),0);
+
+            free(topic_1->actual_message);
+
+            // memset(topic_1->actual_message, 0, sizeof(topic_1->actual_message));
 
             // Kill signal triggering 
-            // if(atomic_load(&(topic_1->kill_sig)) == 1)
-            // {
-            //     atomic_store(&(topic_1->trig_sig),3);
+            if(atomic_load(&(topic_1->kill_sig)) == 1)
+            {
+                atomic_store(&(topic_1->trig_sig),3);
                 
-            //     printf("Kill_signal received \n");
+                printf("Kill_signal received \n");
 
-            //     free(topic_1);
+                free(topic_1);
 
-            //     pthread_exit(NULL);
+                pthread_exit(NULL);
 
-            //     atomic_store(&(topic_1->kill_sig),0);
-
-                // break;
-            // }
+                atomic_store(&(topic_1->kill_sig),0);
+            }
         
             // continue;
             
@@ -163,34 +165,44 @@ PUB_CHECK publisher_proc(void* args, void* tx_buffer)
 
     topic_1->actual_message = malloc(sizeof(tx_buffer));
 
-    while(1)
-    {   
+    // while(1)
+    // {   
 
-        if (atomic_load(&(topic_1->trig_sig)) == 0)
+        if (atomic_load(&(topic_1->trig_sig)) != 0)
         {
-            printf("copied to memory \n");
+            return -1;                   
+        }
+        printf("copied to memory \n");
                 
-            memcpy(topic_1->actual_message, tx_buffer, sizeof(tx_buffer));
+        memcpy(topic_1->actual_message, tx_buffer, sizeof(tx_buffer));
 
-            memset(tx_buffer, 0, sizeof(tx_buffer));
+        // memset(tx_buffer, 0, sizeof(tx_buffer));
 
-            atomic_store(&(topic_1->trig_sig), 1);
-                
+        atomic_store(&(topic_1->trig_sig), 1);
+
+        while(1)
+        {
+            // printf("while reached \n");
+            
+            if (atomic_load(&(topic_1->trig_sig)) == 0)
+            {
+                return 1;
+            }
         }
 
-        else if (atomic_load(&(topic_1->trig_sig)) == 2)
-        {
+        // else if (atomic_load(&(topic_1->trig_sig)) == 2)
+        // {
             
-            printf("pthread_killed \n");
+        //     printf("pthread_killed \n");
 
-            atomic_store(&(topic_1->trig_sig),1);
+        //     atomic_store(&(topic_1->trig_sig),1);
 
-            pthread_exit(&topic_1->server_id);
+        //     pthread_exit(&topic_1->server_id);
 
-            free(topic_1);
+        //     free(topic_1);
             
-            // break;
-        }
+        //     // break;
+        // }
 
         // else if (atomic_load(&topic_1->trig_sig) == 3)
         // {
@@ -200,7 +212,7 @@ PUB_CHECK publisher_proc(void* args, void* tx_buffer)
         // }
 
         // break;
-    }
+    // }
 
 }
 
@@ -249,8 +261,6 @@ topic_param_t* publisher_init(char* topic_str, char* ip_addr_str, char* port_str
                 printf("Thread created \n");
 
                 atomic_store(&(topic_1->trig_sig),0);
-
-                pthread_mutex_init(&(topic_1->thread_mutex),NULL);
                 
                 pthread_create(&topic_1->server_id, NULL, (void*) server_thread, topic_1);
 
@@ -269,9 +279,6 @@ PUB_CHECK publisher_kill(void* args)
 {
     topic_param_t *topic_1 = (topic_param_t*) args;
     
-    // while(1)
-    // {    
-        // pthread_mutex_lock(&(topic_1->thread_mutex));
 
         if (atomic_load(&(topic_1->kill_sig)) == 0)
         {    
@@ -279,9 +286,6 @@ PUB_CHECK publisher_kill(void* args)
             atomic_store(&(topic_1->kill_sig),1); // kill_flag is ON
         
         }
-        // free(topic_1);
-        
-        // pthread_mutex_unlock(&(topic_1->thread_mutex));
 
     // }
     // return PUB_PASS;
@@ -292,38 +296,45 @@ int main()
     topic_param_t T1;
     topic_param_t T2;
     
-    char tx_buffer_1[] = "GOOGLE";
-    char tx_buffer_2[] = "FACEBOOK";
+    char tx_buffer_1[] = "GOOGLE\n";
+    char tx_buffer_2[] = "BOOK\n";
+    char tx_buffer_3[] = "YOUTUBE\n";
+    char tx_buffer_4[] = "TOWO\n";
     
     char disc_msg_1[50];
     char disc_msg_2[50];
 
-    // 1. GendiscMsg 
+    // Things to add 
+    // 1. Adding Kill signal topic status '/0' in publisher_kill() 
+    // 2. Test by creating multiple threads.
+    // 3. Memory freeing and memory allocation 
+    // 4. Testing with actual TCP_lib.c functions.
+    // 5. Publisher Code cleanup. 
     
     topic_param_t* TOPIC_1 = publisher_init("FLT", "1.1.1.35", "8030", "8050", disc_msg_1);
 
     publisher_proc(TOPIC_1, tx_buffer_1);
 
-    // publisher_proc(TOPIC_1, tx_buffer_2);
+    sleep(2);
 
-    // topic_param_t* TOPIC_2 = publisher_init("NAV", "1.1.1.44", "8031", "8051", disc_msg_2);
+    publisher_proc(TOPIC_1, tx_buffer_2);
 
-    // publisher_init(&T1, "FLT", "1.1.1.35", "8030", "8050", disc_msg_1);
-    // publisher_kill(TOPIC_1);
+    sleep(2);
+
+    publisher_proc(TOPIC_1, tx_buffer_3);
+
+    sleep(2);
+
+    publisher_proc(TOPIC_1, tx_buffer_4);
+
+    publisher_kill(TOPIC_1);
 
     // sleep(2);
 
-    
+    // publisher_proc(TOPIC_1, tx_buffer_1);
 
-    // publisher_proc(TOPIC_1, tx_buffer_2);
+    // publisher_proc(TOPIC_1, tx_buffer_1);
 
-    // publisher_kill(TOPIC_1);
-
-    // publisher_kill(&T1);
-    
-    // sleep(5);
-
-    // publisher_init(&T2, "NAV", "1.1.1.45", "8031", "8051", disc_msg_2);
 
     return 0;
 }
