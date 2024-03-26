@@ -11,14 +11,14 @@
 // Synchronizer 
 
 //SYNC DEFINES - 1 - sync_proc_thread_1 variables 
-#define SYNC_PORT_INT "8051" // PORT of the Internal TCP_Server()  of the SYNC_PROCESS
-#define SYNC_PORT_EXT "8091" // PORT of the EXternal TCP_Server() of the SYNC_PROCESS
-#define SHM_NAME_SYNC "/shared_mem_8051" // The SHM_name both the TCP_Servers write into *Note : Only one for each Device / Computer 
+#define SYNC_PORT_INT "8050" // PORT of the Internal TCP_Server()  of the SYNC_PROCESS
+#define SYNC_PORT_EXT "8090" // PORT of the EXternal TCP_Server() of the SYNC_PROCESS
+#define SHM_NAME_SYNC "/shared_mem_8050" // The SHM_name both the TCP_Servers write into *Note : Only one for each Device / Computer 
 
 // SYNC DEFINES - 2 - TCP_lib variables 
 #define MAX_SYNC_SERV 2 // No of SYNCHRONIZERS want to connect to 
 static char *SYNC_CLIENT_IPS[MAX_SYNC_SERV] = {"127.0.0.1", "127.0.0.1"}; // Buffer of all the IP_ADDR of SYNCs in various devices 
-static char *SYNC_CLIENT_PORTS[MAX_SYNC_SERV] = {"8090", "8092"}; // Buffer of all the PORT of SYNC in various deices 
+static char *SYNC_CLIENT_PORTS[MAX_SYNC_SERV] = {"8091", "8092"}; // Buffer of all the PORT of SYNC in various deices 
 
 // Change IPs and PORTs manually in C 
 

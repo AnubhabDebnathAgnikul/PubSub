@@ -80,6 +80,9 @@ int server_thread(void* args)
         exit(EXIT_FAILURE);
     }
 
+    while(1)
+    {
+    
     // listen
     if (listen(server_socket, 5) == -1) 
     {
@@ -100,8 +103,8 @@ int server_thread(void* args)
 
     printf("connections accepted from client_fd : %d \n", client_socket);
 
-    while(1)
-    {
+    // while(1)
+    // {
         
         if (atomic_load(&(topic_1->trig_sig)) == 1)
         {
@@ -117,6 +120,7 @@ int server_thread(void* args)
 
             atomic_store(&(topic_1->trig_sig),2);
 
+            // Kill signal triggering 
             // if(atomic_load(&(topic_1->kill_sig)) == 1)
             // {
             //     atomic_store(&(topic_1->trig_sig),3);
@@ -129,7 +133,7 @@ int server_thread(void* args)
 
             //     atomic_store(&(topic_1->kill_sig),0);
 
-            //     break;
+                // break;
             // }
         
             // continue;
@@ -151,6 +155,7 @@ int server_thread(void* args)
     return 0;
 } 
 
+
 // just change the topic_1->trig_sig  
 PUB_CHECK publisher_proc(void* args, void* tx_buffer)
 {
@@ -158,8 +163,8 @@ PUB_CHECK publisher_proc(void* args, void* tx_buffer)
 
     topic_1->actual_message = malloc(sizeof(tx_buffer));
 
-    // while(1)
-    // {   
+    while(1)
+    {   
 
         if (atomic_load(&(topic_1->trig_sig)) == 0)
         {
@@ -176,13 +181,13 @@ PUB_CHECK publisher_proc(void* args, void* tx_buffer)
         else if (atomic_load(&(topic_1->trig_sig)) == 2)
         {
             
-            // printf("pthread_killed \n");
+            printf("pthread_killed \n");
 
             atomic_store(&(topic_1->trig_sig),1);
 
-            // pthread_exit(&topic_1->server_id);
+            pthread_exit(&topic_1->server_id);
 
-            // free(topic_1);
+            free(topic_1);
             
             // break;
         }
@@ -195,7 +200,7 @@ PUB_CHECK publisher_proc(void* args, void* tx_buffer)
         // }
 
         // break;
-    // }
+    }
 
 }
 
