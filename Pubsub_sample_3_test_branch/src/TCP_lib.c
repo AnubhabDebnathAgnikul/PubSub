@@ -58,7 +58,6 @@ TCP_CHECK TCP_server(TCP_param_t *TCP_param, char* port_listen, int MAX_CLIENTS)
         return TCP_FAIL;
     }
 
-
     // printf("server_fd : %d \n", TCP_param->server_fd);
     // printf("client_fd : %d\n", TCP_param->client_fd);
     // printf("New_sock_fd : %d \n", TCP_param->new_sock_fd);
@@ -134,6 +133,7 @@ TCP_CHECK TCP_send_recv(TCP_param_t *TCP_param_2, void *tx_buffer, void* rx_buff
     // For TCP server usage
     if( (TCP_param_2->tcp_flag == 0) )
     {   
+
         // accept 
         if ((TCP_param_2->client_fd = accept(TCP_param_2->server_fd, (struct sockaddr *) (&TCP_param_2->client_addr), &client_addr_len)) == -1) 
         {
@@ -141,8 +141,8 @@ TCP_CHECK TCP_send_recv(TCP_param_t *TCP_param_2, void *tx_buffer, void* rx_buff
             return TCP_FAIL;
         }
 
-        printf("[+] TCP : Accepted connection client_fd : %d \n", TCP_param_2->client_fd);
-            
+        printf("[+] TCP : Accepted connection from client_fd : %d \n", TCP_param_2->client_fd);    
+        
         if (tx_buffer != NULL)
         {
             if (send(TCP_param_2->client_fd, tx_buffer, strlen(tx_buffer),0) < 0)
@@ -150,6 +150,8 @@ TCP_CHECK TCP_send_recv(TCP_param_t *TCP_param_2, void *tx_buffer, void* rx_buff
                 perror("SEND_FAILURE \n");
                 return TCP_FAIL;
             }
+
+            printf("MESSAGE SENT TO SERVER : %s \n", (char*) tx_buffer);
         }
 
         if (rx_buffer != NULL)
@@ -180,6 +182,8 @@ TCP_CHECK TCP_send_recv(TCP_param_t *TCP_param_2, void *tx_buffer, void* rx_buff
                 perror("SEND_FAILURE \n");
                 return TCP_FAIL;
             }
+
+            printf("MESSAGE SENT TO SERVER : %s \n", (char*) tx_buffer);
         }
 
         if (rx_buffer != NULL)

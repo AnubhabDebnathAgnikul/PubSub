@@ -7,6 +7,8 @@
 // Headers
 #include "TCP_lib.h"
 #include "GenDiscMsg.h"
+#include "string_lib.h"
+
 #include <pthread.h>
 #include <stdatomic.h>
 #include <unistd.h>
@@ -35,100 +37,41 @@ typedef enum
     PUB_PASS = 1,
     PUB_FAIL = -1
 }PUB_CHECK;
- 
+
+
+// Function to be run by the thread
 int server_thread(void* args) 
 {
-    
     topic_param_t* topic_1 = (topic_param_t*) args;
-    int server_socket, client_socket;
-    struct sockaddr_in server_addr, client_addr;
-    int client_sockets[5];
-    socklen_t client_addr_len = sizeof(client_addr);
-    int port_int;
-    int reuse = 1;
 
-    char internal_buff[2500];
-
-
-    // Creating socket
-    if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1) 
-    {
-        perror("Socket creation failed");
-        exit(EXIT_FAILURE);
-    }
-    
-    // Type conversion string -> int
-    port_int = atoi(topic_1->port_str);
-
-    // Config settings
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(port_int);
-
-    // reuse port and address 
-    if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &reuse, sizeof(reuse)) < 0) 
-    {
-        perror("Setting SO_REUSEPORT failed");
-        exit(EXIT_FAILURE);
-    }
-
-
-    // Bind
-    if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) == -1) 
-    {
-        perror("Binding failed");
-        exit(EXIT_FAILURE);
-    }
-
-    // while(1)
-    // {
-    
-    // listen
-    if (listen(server_socket, 5) == -1) 
-    {
-        perror("Listen failed");
-        exit(EXIT_FAILURE);
-    }
-
-    
-    printf("[+] TCP : TCP Server created and listening on Port ID: %d......\n", port_int);
-
-    // accept 
-    if ((client_socket = accept(server_socket, (struct sockaddr *)&client_addr, &client_addr_len)) == -1) 
-    {
-        perror("Acceptance failed");
-        exit(EXIT_FAILURE);
-
-    }
-
-    printf("connections accepted from client_fd : %d \n", client_socket);
+    TCP_param_t TCP_1;
 
     while(1)
     {
         
+        
         if (atomic_load(&(topic_1->trig_sig)) == 1)
         {
+            TCP_server(&TCP_1, topic_1->port_str, 5);
+            
             printf("Trig_signal received \n");
 
-            printf("Value send to client : %s \n", (char*) topic_1->actual_message);
-            
-            if (send(client_socket, topic_1->actual_message, sizeof(topic_1->actual_message), 0) < 0)
-            {
-                perror("SEND_FAILURE");
-                exit(EXIT_FAILURE);
-            }
+            printf("message to be send %s", (char*) topic_1->actual_message);
 
-            atomic_store(&(topic_1->trig_sig),0);
+           
+            TCP_send_recv(&TCP_1, topic_1->actual_message, NULL);
+                
+            atomic_store(&(topic_1->trig_sig),0); // changing back to 0 state 
 
             free(topic_1->actual_message);
+                    
+        }
 
-            // memset(topic_1->actual_message, 0, sizeof(topic_1->actual_message));
-
-            // Kill signal triggering 
+         // Kill signal triggering 
             if(atomic_load(&(topic_1->kill_sig)) == 1)
             {
                 atomic_store(&(topic_1->trig_sig),3);
-                
+                        
                 printf("Kill_signal received \n");
 
                 free(topic_1);
@@ -137,84 +80,10 @@ int server_thread(void* args)
 
                 atomic_store(&(topic_1->kill_sig),0);
             }
-        
-            // continue;
-            
-        }
-        
-
-        // break;
-                        
-        // printf("[+] TCP : Message sent to client successfully : Message = %s pkt count : %d\n",g_tx_buffer,i);
-                    
     }
-         
-
-    // Closing both client and server sockets
-    close(client_socket);
-    close(server_socket);
-    
-    return 0;
-} 
-
-
-// just change the topic_1->trig_sig  
-PUB_CHECK publisher_proc(void* args, void* tx_buffer)
-{
-    topic_param_t* topic_1 = (topic_param_t*) args;
-
-    topic_1->actual_message = malloc(sizeof(tx_buffer));
-
-    // while(1)
-    // {   
-
-        if (atomic_load(&(topic_1->trig_sig)) != 0)
-        {
-            return -1;                   
-        }
-        printf("copied to memory \n");
-                
-        memcpy(topic_1->actual_message, tx_buffer, sizeof(tx_buffer));
-
-        // memset(tx_buffer, 0, sizeof(tx_buffer));
-
-        atomic_store(&(topic_1->trig_sig), 1);
-
-        while(1)
-        {
-            // printf("while reached \n");
-            
-            if (atomic_load(&(topic_1->trig_sig)) == 0)
-            {
-                return 1;
-            }
-        }
-
-        // else if (atomic_load(&(topic_1->trig_sig)) == 2)
-        // {
-            
-        //     printf("pthread_killed \n");
-
-        //     atomic_store(&(topic_1->trig_sig),1);
-
-        //     pthread_exit(&topic_1->server_id);
-
-        //     free(topic_1);
-            
-        //     // break;
-        // }
-
-        // else if (atomic_load(&topic_1->trig_sig) == 3)
-        // {
-            
-        //     break;
-        
-        // }
-
-        // break;
-    // }
-
 }
+
+
 
 // 1st function 
 topic_param_t* publisher_init(char* topic_str, char* ip_addr_str, char* port_str, char* sync_port,char* Discmsg_buff)
@@ -232,8 +101,7 @@ topic_param_t* publisher_init(char* topic_str, char* ip_addr_str, char* port_str
     // Trigger signal and kill signal assigned to 0 
     topic_1->trig_sig = 0; 
     topic_1->kill_sig = 0;
-    // topic_1->input_ready = 0;
-    // topic_1->server_th_id = server_id;
+
     strcpy(topic_1->topic, topic_str); 
     strcpy(topic_1->port_str, port_str);
 
@@ -248,7 +116,7 @@ topic_param_t* publisher_init(char* topic_str, char* ip_addr_str, char* port_str
         {
             rx_buff_value = atoi(TCP_rx_buff);
             printf("buff int : %d \n", rx_buff_value);
-            memset(Discmsg_buff, 0, sizeof(Discmsg_buff));
+            // memset(Discmsg_buff, 0, sizeof(Discmsg_buff));
     
             if (rx_buff_value == 3) 
             {
@@ -273,22 +141,73 @@ topic_param_t* publisher_init(char* topic_str, char* ip_addr_str, char* port_str
 
 }
 
+// 2nd function 
+// just change the topic_1->trig_sig  
+PUB_CHECK publisher_proc(void* args, void* tx_buffer)
+{
+    topic_param_t* topic_1 = (topic_param_t*) args;
+
+    topic_1->actual_message = malloc(sizeof(tx_buffer));
+
+    if (atomic_load(&(topic_1->trig_sig)) != 0)
+    {
+        return -1;                   
+    }
+
+    printf("copied to memory \n");
+                
+    memcpy(topic_1->actual_message, tx_buffer, sizeof(tx_buffer));
+
+    atomic_store(&(topic_1->trig_sig), 1);
+
+    while(1)
+    {
+        if(atomic_load(&(topic_1->trig_sig)) == 0)
+        {
+            return PUB_PASS;
+        }
+    }
+
+}
+
+// 3rd function 
 // still implementation '/0' pending 
-// kill signal integrate 
-PUB_CHECK publisher_kill(void* args)
+// kill signal integrated 
+PUB_CHECK publisher_kill(void* args, char* sync_port, char* disc_msg_buffer)
 {
     topic_param_t *topic_1 = (topic_param_t*) args;
+
+    TCP_param_t TCP_C2;
     
 
-        if (atomic_load(&(topic_1->kill_sig)) == 0)
-        {    
+    if (atomic_load(&(topic_1->kill_sig)) == 0)
+    {   
+        if (TCP_client(&TCP_C2, sync_port, "127.0.0.1") > 0)
+        {
             
-            atomic_store(&(topic_1->kill_sig),1); // kill_flag is ON
-        
+            updatesubstr(disc_msg_buffer, "1", "0");
+            
+            TCP_send_recv(&TCP_C2, disc_msg_buffer, NULL);
+
+            memset(disc_msg_buffer, 0, sizeof(disc_msg_buffer));
+
         }
 
+        atomic_store(&(topic_1->kill_sig),1); // kill_flag is ON
+
+    }
+
+    // while(1)
+    // {
+    //     if(atomic_load(&(topic_1->kill_sig)) == 0)
+    //     {
+    //         return PUB_PASS;
+    //     }
     // }
-    // return PUB_PASS;
+
+    return PUB_PASS;
+
+
 }
 
 int main()
@@ -296,13 +215,13 @@ int main()
     topic_param_t T1;
     topic_param_t T2;
     
-    char tx_buffer_1[] = "GOOGLE\n";
-    char tx_buffer_2[] = "BOOK\n";
-    char tx_buffer_3[] = "YOUTUBE\n";
-    char tx_buffer_4[] = "TOWO\n";
+    char tx_buffer_1[] = "GOOGLE";
+    char tx_buffer_2[] = "BOOK";
+    char tx_buffer_3[] = "YOUTUBE";
+    char tx_buffer_4[] = "TOWO";
     
-    char disc_msg_1[50];
-    char disc_msg_2[50];
+    char disc_msg_1[40];
+    char disc_msg_2[40];
 
     // Things to add 
     // 1. Adding Kill signal topic status '/0' in publisher_kill() 
@@ -313,21 +232,37 @@ int main()
     
     topic_param_t* TOPIC_1 = publisher_init("FLT", "1.1.1.35", "8030", "8050", disc_msg_1);
 
+    // topic_param_t* TOPIC_2 = publisher_init("NAV", "1.1.1.45", "8031", "8051", disc_msg_2);
+
     publisher_proc(TOPIC_1, tx_buffer_1);
 
-    sleep(2);
+    // sleep(1);
 
     publisher_proc(TOPIC_1, tx_buffer_2);
 
-    sleep(2);
+    // sleep(1);    
 
     publisher_proc(TOPIC_1, tx_buffer_3);
 
-    sleep(2);
+    // sleep(1);    
 
-    publisher_proc(TOPIC_1, tx_buffer_4);
+    // publisher_proc(TOPIC_1, tx_buffer_4);
 
-    publisher_kill(TOPIC_1);
+    // sleep(1);
+
+    publisher_kill(TOPIC_1, "8050", disc_msg_1);
+
+    // sleep(5);
+
+    topic_param_t* TOPIC_2 = publisher_init("NAV", "1.1.1.45", "8031", "8051", disc_msg_2);
+
+    // sleep(2); 
+
+    publisher_proc(TOPIC_2, tx_buffer_4);
+
+    publisher_kill(TOPIC_2, "8051", disc_msg_2);
+
+    // publisher_kill(TOPIC_2, "8051", disc_msg_2);
 
     // sleep(2);
 
@@ -335,6 +270,6 @@ int main()
 
     // publisher_proc(TOPIC_1, tx_buffer_1);
 
-
     return 0;
+
 }
