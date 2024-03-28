@@ -14,5 +14,5 @@
 /// @param - char* - Port_need
 /// @param - char* - char buffer of disc message 
 /// @return - (void) NIL 
-void GenDiscMsg(char *,char *,char *, char *);
+void GenDiscMsg(char *, char *, char *, char *);
 

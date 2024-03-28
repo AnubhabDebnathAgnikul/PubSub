@@ -86,7 +86,7 @@ int server_thread(void* args)
 
 
 // 1st function 
-topic_param_t* publisher_init(char* topic_str, char* ip_addr_str, char* port_str, char* sync_port,char* Discmsg_buff)
+topic_param_t* publisher_init (char* topic_str, char* ip_addr_str, char* port_str, char* sync_port, char* Discmsg_buff)
 {
     // Local variables
     char TCP_rx_buff[10];
@@ -102,11 +102,11 @@ topic_param_t* publisher_init(char* topic_str, char* ip_addr_str, char* port_str
     topic_1->trig_sig = 0; 
     topic_1->kill_sig = 0;
 
-    strcpy(topic_1->topic, topic_str); 
-    strcpy(topic_1->port_str, port_str);
-
     // 2. Gendisc_msg()
     GenDiscMsg(topic_str, ip_addr_str, port_str, Discmsg_buff);
+
+    memcpy(topic_1->topic, topic_str , strlen(topic_str)); 
+    memcpy(topic_1->port_str, port_str, strlen(port_str));
     
     // 3. Sending DiscMsg to Sync server and checking its validity
     if (TCP_client(&TCP_C1, sync_port, "127.0.0.1") > 0) // Creating a TCP_Client to connect to Synchronizer
@@ -178,14 +178,14 @@ PUB_CHECK publisher_kill(void* args, char* sync_port, char* disc_msg_buffer)
     topic_param_t *topic_1 = (topic_param_t*) args;
 
     TCP_param_t TCP_C2;
+
+    updatesubstr(disc_msg_buffer, "1", "0");
     
 
     if (atomic_load(&(topic_1->kill_sig)) == 0)
     {   
         if (TCP_client(&TCP_C2, sync_port, "127.0.0.1") > 0)
         {
-            
-            updatesubstr(disc_msg_buffer, "1", "0");
             
             TCP_send_recv(&TCP_C2, disc_msg_buffer, NULL);
 
@@ -220,55 +220,50 @@ int main()
     char tx_buffer_3[] = "YOUTUBE";
     char tx_buffer_4[] = "TOWO";
     
-    char disc_msg_1[40];
-    char disc_msg_2[40];
+    char disc_msg_1[100];
+    char disc_msg_2[100];
 
-    // Things to add 
-    // 1. Adding Kill signal topic status '/0' in publisher_kill() 
-    // 2. Test by creating multiple threads.
-    // 3. Memory freeing and memory allocation 
-    // 4. Testing with actual TCP_lib.c functions.
-    // 5. Publisher Code cleanup. 
+    // Things to add  
+    // 1. Test by creating multiple threads.
+    // 2. Memory freeing and memory allocation 
+    // 3. Testing with actual TCP_lib.c functions.
+    // 4. Publisher Code cleanup. 
     
     topic_param_t* TOPIC_1 = publisher_init("FLT", "1.1.1.35", "8030", "8050", disc_msg_1);
 
-    // topic_param_t* TOPIC_2 = publisher_init("NAV", "1.1.1.45", "8031", "8051", disc_msg_2);
-
-    publisher_proc(TOPIC_1, tx_buffer_1);
-
-    // sleep(1);
-
-    publisher_proc(TOPIC_1, tx_buffer_2);
-
-    // sleep(1);    
-
-    publisher_proc(TOPIC_1, tx_buffer_3);
-
-    // sleep(1);    
-
-    // publisher_proc(TOPIC_1, tx_buffer_4);
-
-    // sleep(1);
-
+    sleep(1);
+    
     publisher_kill(TOPIC_1, "8050", disc_msg_1);
 
-    // sleep(5);
+    sleep(2);
 
     topic_param_t* TOPIC_2 = publisher_init("NAV", "1.1.1.45", "8031", "8051", disc_msg_2);
 
-    // sleep(2); 
+    sleep(1);
 
-    publisher_proc(TOPIC_2, tx_buffer_4);
+    publisher_kill(TOPIC_2, "8050", disc_msg_2);
 
-    publisher_kill(TOPIC_2, "8051", disc_msg_2);
+    // sleep(1);
 
-    // publisher_kill(TOPIC_2, "8051", disc_msg_2);
+    // publisher_proc(TOPIC_1, tx_buffer_1);
+
+    // // sleep(1);
+
+    // publisher_proc(TOPIC_1, tx_buffer_2);
+
+    // // sleep(1);    
+
+    // publisher_proc(TOPIC_1, tx_buffer_3);
+
+    // publisher_kill(TOPIC_1, "8050", disc_msg_1);
 
     // sleep(2);
 
-    // publisher_proc(TOPIC_1, tx_buffer_1);
+    // topic_param_t* TOPIC_2 = publisher_init("NAV", "1.1.1.45", "8031", "8051", disc_msg_2);
 
-    // publisher_proc(TOPIC_1, tx_buffer_1);
+    // publisher_proc(TOPIC_2, tx_buffer_4);
+
+    // publisher_kill(TOPIC_2, "8051", disc_msg_2);
 
     return 0;
 

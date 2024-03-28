@@ -12,11 +12,11 @@ OBJ_1 = BIN/pub_node_1
 
 # SRC_2 & OBJ_2 For Building all the TCP - Synchronizer Proc 
 SRC_2 = src/TCP_lib.c src/SHM_lib.c src/string_lib.c src/DiscMsg_check.c src/synchronizer_main.c 
-OBJ_2 = BIN/synchronizer_2
+OBJ_2 = BIN/synchronizer_1
 
 # SRC_3 & OBJ_3 For Building all the Subscriber proc 
 SRC_3 = src/TCP_lib.c src/SHM_lib.c src/string_lib.c src/DiscMsg_check.c src/subscriber.c src/sub_node_main.c
-OBJ_3 = BIN/sub_node_2
+OBJ_3 = BIN/sub_node_1
 	
 # SAMPLE and OBJ_4 for buliding any sample problems or Unit test codes 
 # SAMPLE = src/TCP_lib.c src/SHM_lib.c src/GenDiscMsg.c src/sample_Gen_mesg.c

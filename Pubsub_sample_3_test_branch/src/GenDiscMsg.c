@@ -8,9 +8,9 @@
 #include "GenDiscMsg.h"
 #include "TCP_lib.h"
 
-char result_msg[] = {0};
+// char result_msg[] = {0};
 
-void GenDiscMsg(char* subscribe_topic,char* IP_need,char* Port_need, char* result_msg)
+void GenDiscMsg(char* subscribe_topic, char* IP_need, char* Port_need, char* result_msg)
 {   
     
     strncat(result_msg,subscribe_topic,sizeof(subscribe_topic));
@@ -26,8 +26,4 @@ void GenDiscMsg(char* subscribe_topic,char* IP_need,char* Port_need, char* resul
 
     printf("\n the result string is %s \n",result_msg);
 
-    // TCP_Client("8010","127.0.0.1",result_msg); // form a TCP client to a internaL TCP PROC. and decode the message in main Publish proc. and form a TCP Server there 
-    
-    // Write the DiscMsg to the SHM 
-    // SHM_init_write (shm_name,shm_size, map_ptr,result_msg);
 } 
